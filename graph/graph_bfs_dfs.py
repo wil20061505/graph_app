@@ -1,51 +1,42 @@
-﻿def bfs(input_graph, input_start_node):
-    """
-    Thuật toán tìm kiếm theo chiều rộng (Breadth-First Search).
-    """
-    # Kiểm tra đỉnh bắt đầu có tồn tại không
-    if input_start_node not in input_graph.adj:
-        return f"Đỉnh {input_start_node} không tồn tại trong đồ thị."
+﻿def bfs(graph, start):
+    if start not in graph.adj:
+        return f"Đỉnh {start} không tồn tại trong đồ thị."
 
-    output_visited_nodes = []
-    queue_nodes = [input_start_node]
-    visited_set = {input_start_node}
+    visited = []
+    queue = [start]
+    seen = set([start])
 
-    while queue_nodes:
-        current_node = queue_nodes.pop(0)
-        output_visited_nodes.append(current_node)
+    while queue:
+        u = queue.pop(0)
+        visited.append(u)
 
-        # Duyệt qua các đỉnh kề
-        # neighbor_data là tuple (neighbor_node, weight)
-        for neighbor_node, edge_weight in input_graph.adj.get(current_node, []):
-            if neighbor_node not in visited_set:
-                visited_set.add(neighbor_node)
-                queue_nodes.append(neighbor_node)
-                
-    return output_visited_nodes
+        # neighbors: dict {v: weight}
+        for v in graph.adj[u].keys():
+            if v not in seen:
+                seen.add(v)
+                queue.append(v)
 
-def dfs(input_graph, input_start_node):
-    """
-    Thuật toán tìm kiếm theo chiều sâu (Depth-First Search).
-    """
-    if input_start_node not in input_graph.adj:
-        return f"Đỉnh {input_start_node} không tồn tại trong đồ thị."
+    return visited
 
-    output_visited_nodes = []
-    stack_nodes = [input_start_node]
-    visited_set = set()
 
-    while stack_nodes:
-        current_node = stack_nodes.pop()
-        
-        if current_node not in visited_set:
-            visited_set.add(current_node)
-            output_visited_nodes.append(current_node)
+def dfs(graph, start):
+    if start not in graph.adj:
+        return f"Đỉnh {start} không tồn tại trong đồ thị."
 
-            # Lấy danh sách kề
-            neighbors_list = input_graph.adj.get(current_node, [])
-            # Đảo ngược để khi push vào stack sẽ duyệt theo đúng thứ tự mong muốn
-            for neighbor_node, edge_weight in reversed(neighbors_list):
-                if neighbor_node not in visited_set:
-                    stack_nodes.append(neighbor_node)
+    visited = []
+    stack = [start]
+    seen = set()
 
-    return output_visited_nodes
+    while stack:
+        u = stack.pop()
+
+        if u not in seen:
+            seen.add(u)
+            visited.append(u)
+
+            # reversed để giữ thứ tự giống list cũ
+            for v in reversed(list(graph.adj[u].keys())):
+                if v not in seen:
+                    stack.append(v)
+
+    return visited

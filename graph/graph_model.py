@@ -7,11 +7,6 @@
             ...
         }
     Dùng chung cho:
-        - BFS / DFS
-        - Dijkstra
-        - Prim (MST)
-        - Bipartite
-        - Convert matrix
     """
     def __init__(self):
         self.adj = {}
