@@ -8,3 +8,4 @@
    - input_value
    - processed_result
 5. Tránh dùng tên một ký tự (trừ biến vòng lặp).
+6. Kiểu dữ liệu đầu vào là 1 danh sách kề
