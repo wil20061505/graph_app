@@ -1,0 +1,69 @@
+class DisjointSet:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.rank = [0] * n
+
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        rx = self.find(x)
+        ry = self.find(y)
+        if rx == ry:
+            return False
+
+        if self.rank[rx] < self.rank[ry]:
+            self.parent[rx] = ry
+        elif self.rank[rx] > self.rank[ry]:
+            self.parent[ry] = rx
+        else:
+            self.parent[ry] = rx
+            self.rank[rx] += 1
+        return True
+
+
+class Kruskal:
+    def run(self, g):
+        # Lấy danh sách đỉnh
+        vertices = g.get_vertices()
+
+        # Map đỉnh → index (vì DSU dùng số)
+        index_of = {v: i for i, v in enumerate(vertices)}
+
+        # Tạo danh sách cạnh (u, v, weight)
+        edges = []
+        added = set()  # tránh trùng cạnh trong đồ thị vô hướng
+
+        for u in g.adj:
+            for v, w in g.adj[u].items():
+                key = tuple(sorted([u, v]))
+                if key not in added:  # tránh thêm 2 lần trong undirected graph
+                    edges.append((u, v, w))
+                    added.add(key)
+
+        # Sắp xếp cạnh theo trọng số
+        edges.sort(key=lambda x: x[2])
+
+        dsu = DisjointSet(len(vertices))
+
+        mst = []
+        total_weight = 0
+
+        for u, v, w in edges:
+            iu = index_of[u]
+            iv = index_of[v]
+
+            if dsu.union(iu, iv):  # nếu hợp nhất được → không tạo chu trình
+                mst.append((u, v, w))
+                total_weight += w
+
+                if len(mst) == len(vertices) - 1:
+                    break
+
+        return mst, total_weight
+
+
+def kruskal(g):
+    return Kruskal().run(g)
