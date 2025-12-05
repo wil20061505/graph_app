@@ -1,100 +1,78 @@
 import copy
 
-def bfs_count_reachable_nodes(input_graph, input_start_node):
+def bfs_count_reachable_nodes(graph, start):
     """
-    Hàm phụ trợ: Đếm số lượng đỉnh có thể đi tới từ đỉnh bắt đầu.
-    Dùng để kiểm tra tính chất Cầu (Bridge).
+    Đếm số đỉnh có thể đi tới từ 1 đỉnh.
+    Dùng để kiểm tra cạnh có phải cầu hay không.
     """
-    if input_start_node not in input_graph.adj:
+    if start not in graph.adj:
         return 0
-        
-    visited_nodes = {input_start_node}
-    queue_nodes = [input_start_node]
-    count_nodes = 1 # Đếm cả đỉnh bắt đầu
 
-    while queue_nodes:
-        current_processing_node = queue_nodes.pop(0)
-        
-        # Duyệt qua các đỉnh kề
-        for neighbor_node_info in input_graph.adj.get(current_processing_node, []):
-            # neighbor_node_info có thể là tuple (node, weight) hoặc chỉ node
-            # Xử lý để lấy node id
-            neighbor_id = neighbor_node_info[0] if isinstance(neighbor_node_info, (list, tuple)) else neighbor_node_info
-            
-            if neighbor_id not in visited_nodes:
-                visited_nodes.add(neighbor_id)
-                queue_nodes.append(neighbor_id)
-                count_nodes += 1
-                
-    return count_nodes
+    visited = {start}
+    queue = [start]
 
-def fleury(input_graph):
+    while queue:
+        u = queue.pop(0)
+        for v in graph.adj[u].keys():   # v là node kề
+            if v not in visited:
+                visited.add(v)
+                queue.append(v)
+
+    return len(visited)
+
+
+def fleury(graph):
     """
-    Thuật toán Fleury tìm đường đi/chu trình Euler.
+    Thuật toán Fleury tìm đường đi hoặc chu trình Euler.
+    Áp dụng cho đồ thị vô hướng.
     """
-    # Tạo bản sao để không làm hỏng dữ liệu gốc
-    # Tên biến mô tả rõ ý nghĩa: working_graph (đồ thị đang làm việc)
-    working_graph = copy.deepcopy(input_graph)
-    
-    # 1. Kiểm tra điều kiện Euler và tìm đỉnh bắt đầu
-    # Lấy danh sách các đỉnh có bậc lẻ
-    list_odd_degree_nodes = []
-    for node_id, neighbors_list in working_graph.adj.items():
-        if len(neighbors_list) % 2 != 0:
-            list_odd_degree_nodes.append(node_id)
-            
-    # Điều kiện: 0 đỉnh lẻ (Chu trình) hoặc 2 đỉnh lẻ (Đường đi)
-    if len(list_odd_degree_nodes) not in [0, 2]:
+    # Sao chép để không làm hỏng dữ liệu gốc
+    g = copy.deepcopy(graph)
+
+    # --- 1. Tìm các đỉnh bậc lẻ ---
+    odd_nodes = [u for u in g.adj if len(g.adj[u]) % 2 == 1]
+
+    # Điều kiện Euler
+    if len(odd_nodes) not in (0, 2):
         return "Không tồn tại đường đi hay chu trình Euler."
 
-    # Chọn đỉnh bắt đầu: Nếu có đỉnh lẻ thì bắt đầu từ đó, không thì bắt đầu từ đỉnh bất kỳ (ví dụ đỉnh đầu tiên trong dict)
-    current_node = list_odd_degree_nodes[0] if list_odd_degree_nodes else next(iter(working_graph.adj))
-    
-    # Biến đầu ra
-    output_euler_path = [current_node]
+    # Đỉnh bắt đầu
+    current = odd_nodes[0] if odd_nodes else next(iter(g.adj))
 
-    # Hàm kiểm tra xem cạnh nối (u, v) có hợp lệ để đi không
-    def is_valid_edge(check_u, check_v):
-        # 1. Nếu v là đỉnh kề duy nhất của u, bắt buộc phải đi
-        if len(working_graph.adj[check_u]) == 1:
+    path = [current]
+
+    def is_valid_edge(u, v):
+        """
+        Kiểm tra cạnh (u, v) có phải cầu hay không.
+        """
+        # 1. Nếu chỉ có 1 cạnh để đi → phải đi
+        if len(g.adj[u]) == 1:
             return True
-        
-        # 2. Kiểm tra xem cạnh (check_u, check_v) có phải là Cầu (Bridge) không
-        # a. Đếm số đỉnh đến được trước khi xóa cạnh
-        count_before_remove = bfs_count_reachable_nodes(working_graph, check_u)
-        
-        # b. Xóa tạm cạnh
-        working_graph.remove_edge(check_u, check_v)
-        
-        # c. Đếm số đỉnh đến được sau khi xóa
-        count_after_remove = bfs_count_reachable_nodes(working_graph, check_u)
-        
-        # d. Thêm lại cạnh (hoàn tác) để xét tiếp hoặc chọn đi thật
-        working_graph.add_edge(check_u, check_v, 1) # Giả sử trọng số 1 hoặc lấy từ dữ liệu cũ nếu cần
-        
-        # Nếu số lượng đỉnh đến được giảm -> Là Cầu -> Không nên đi (trừ khi là duy nhất)
-        return count_before_remove <= count_after_remove
 
-    # Vòng lặp chính: Chạy khi đỉnh hiện tại vẫn còn cạnh nối
-    while working_graph.adj.get(current_node):
-        found_next_step = False
-        
-        # Lấy danh sách các hàng xóm (copy ra list mới để tránh lỗi khi sửa đổi trong loop)
-        neighbors_data = list(working_graph.adj[current_node])
-        
-        for neighbor_info in neighbors_data:
-            target_neighbor = neighbor_info[0] if isinstance(neighbor_info, (list, tuple)) else neighbor_info
-            
-            if is_valid_edge(current_node, target_neighbor):
-                # Nếu cạnh hợp lệ, thực hiện di chuyển
-                output_euler_path.append(target_neighbor)
-                working_graph.remove_edge(current_node, target_neighbor)
-                current_node = target_neighbor
-                found_next_step = True
+        # 2. Đếm số đỉnh reachable trước khi xóa
+        c1 = bfs_count_reachable_nodes(g, u)
+
+        # 3. Xóa cạnh (u, v)
+        g.remove_edge(u, v)
+
+        # 4. Đếm lại
+        c2 = bfs_count_reachable_nodes(g, u)
+
+        # 5. Thêm lại cạnh
+        #    Lấy đúng trọng số cũ
+        g.add_edge(u, v, graph.adj[u][v], undirected=True)
+
+        # Nếu giảm → đó là cầu → không được đi
+        return c1 <= c2
+
+    # --- 2. Duyệt Fleury ---
+    while g.adj.get(current):
+        for v in list(g.adj[current].keys()):
+            if is_valid_edge(current, v):
+                # Đi cạnh này
+                path.append(v)
+                g.remove_edge(current, v)
+                current = v
                 break
-        
-        # Nếu duyệt hết hàng xóm mà không đi được (trường hợp hiếm do đồ thị không liên thông), dừng lại
-        if not found_next_step:
-            break
-            
-    return output_euler_path
+
+    return path

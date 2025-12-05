@@ -1,57 +1,47 @@
 import copy
 
-def hierholzer(input_graph):
+def hierholzer(graph):
     """
-    Thuật toán Hierholzer tìm đường đi/chu trình Euler.
+    Thuật toán Hierholzer tìm chu trình hoặc đường đi Euler.
+    Áp dụng cho đồ thị vô hướng dùng cấu trúc:
+        adj[u] = {v: weight, ...}
     """
-    # Tạo bản sao đồ thị
-    working_graph = copy.deepcopy(input_graph)
+    # Sao chép để giữ nguyên đồ thị gốc
+    g = copy.deepcopy(graph)
 
-    # 1. Kiểm tra điều kiện và tìm đỉnh bắt đầu
-    list_odd_degree_nodes = []
-    
-    # Đếm bậc các đỉnh
-    # Nếu đồ thị có hướng cần tính bán bậc ra/vào (out_degree, in_degree) riêng
-    for node_id, neighbors_list in working_graph.adj.items():
-        if len(neighbors_list) % 2 != 0:
-            list_odd_degree_nodes.append(node_id)
-    
-    if len(list_odd_degree_nodes) not in [0, 2]:
-         return "Không tồn tại đường đi hay chu trình Euler."
+    # --- 1. Kiểm tra bậc các đỉnh ---
+    odd_nodes = [u for u in g.adj if len(g.adj[u]) % 2 == 1]
 
-    # Chọn đỉnh bắt đầu
-    start_execution_node = list_odd_degree_nodes[0] if list_odd_degree_nodes else next(iter(working_graph.adj))
+    if len(odd_nodes) not in (0, 2):
+        return "Không tồn tại đường đi hay chu trình Euler."
 
-    # Khởi tạo các biến lưu trữ
-    # processing_stack: Stack dùng để duyệt thám hiểm (DFS style)
-    processing_stack = [start_execution_node] 
-    
-    # output_euler_circuit: Danh sách chứa kết quả đường đi
-    output_euler_circuit = []
+    # Nếu có 2 đỉnh lẻ → đó là điểm đầu
+    start = odd_nodes[0] if odd_nodes else next(iter(g.adj))
 
-    # Vòng lặp xử lý Stack
-    while processing_stack:
-        # Lấy đỉnh ở trên cùng stack (nhưng chưa lấy ra hẳn - peek)
-        current_vertex = processing_stack[-1]
+    # Stack duyệt thuật toán
+    stack = [start]
+    path = []
 
-        # Kiểm tra xem đỉnh này còn cạnh nào nối đi nơi khác không
-        if working_graph.adj.get(current_vertex):
-            # Lấy đỉnh kề đầu tiên trong danh sách kề
-            neighbor_info = working_graph.adj[current_vertex][0]
-            target_neighbor = neighbor_info[0] if isinstance(neighbor_info, (list, tuple)) else neighbor_info
-            
-            # Đẩy đỉnh kề vào stack để duyệt tiếp
-            processing_stack.append(target_neighbor)
-            
-            # Xóa cạnh vừa đi qua để không đi lại ("đốt cầu")
-            working_graph.remove_edge(current_vertex, target_neighbor)
+    # --- 2. Hierholzer ---
+    while stack:
+        u = stack[-1]
+
+        # Nếu còn cạnh
+        if g.adj[u]:
+            # Lấy một hàng xóm bất kỳ
+            v = next(iter(g.adj[u].keys()))
+
+            # Đi sang v
+            stack.append(v)
+
+            # Xóa cạnh u–v
+            g.remove_edge(u, v)
+
         else:
-            # Nếu đỉnh hiện tại không còn đường đi (ngõ cụt trong lượt duyệt này)
-            # Lấy nó ra khỏi stack và thêm vào kết quả cuối cùng
-            finished_vertex = processing_stack.pop()
-            output_euler_circuit.append(finished_vertex)
+            # Ngõ cụt → đưa vào kết quả
+            path.append(stack.pop())
 
-    # Kết quả của Hierholzer được thêm vào theo thứ tự ngược, nên cần đảo ngược lại list
-    output_euler_circuit.reverse()
-    
-    return output_euler_circuit
+    # Đảo chiều path vì thuật toán sinh ra ngược
+    path.reverse()
+
+    return path
