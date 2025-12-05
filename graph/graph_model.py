@@ -1,19 +1,57 @@
 ﻿class Graph:
+    """
+    Đồ thị vô hướng hoặc có hướng, có trọng số.
+    Lưu bằng cấu trúc chuẩn:
+        adj = {
+            u: {v: weight_uv, ...},
+            ...
+        }
+    Dùng chung cho:
+        - BFS / DFS
+        - Dijkstra
+        - Prim (MST)
+        - Bipartite
+        - Convert matrix
+    """
     def __init__(self):
-        # Lưu danh sách kề (Adjacency List)
-        # Cấu trúc: {tên_đỉnh: [(đỉnh_kề, trọng_số), ...]}
         self.adj = {}
 
-    def add_edge(self, input_source_node, input_target_node, input_weight=1):
+    def add_vertex(self, node):
         """
-        Thêm cạnh từ đỉnh nguồn (source) đến đỉnh đích (target) với trọng số (weight).
+        Thêm một đỉnh nếu chưa tồn tại.
         """
-        # Đảm bảo các đỉnh tồn tại trong danh sách kề
-        if input_source_node not in self.adj:
-            self.adj[input_source_node] = []
-        if input_target_node not in self.adj:
-            self.adj[input_target_node] = []
-        
-        # Thêm cạnh vào danh sách kề
-        # Lưu dưới dạng tuple: (neighbor, weight)
-        self.adj[input_source_node].append((input_target_node, int(input_weight)))
+        if node not in self.adj:
+            self.adj[node] = {}
+
+    def add_edge(self, source, target, weight=1, undirected=False):
+        """
+        Thêm cạnh từ source → target với trọng số weight.
+        Nếu undirected=True thì thêm luôn cả chiều ngược lại.
+        """
+        self.add_vertex(source)
+        self.add_vertex(target)
+
+        w = int(weight)
+        self.adj[source][target] = w
+
+        if undirected:
+            self.adj[target][source] = w
+
+    def get_vertices(self):
+        """
+        Trả về danh sách tất cả các đỉnh.
+        """
+        return list(self.adj.keys())
+
+    def get_neighbors(self, node):
+        """
+        Trả về dict các đỉnh kề dạng:
+           {neighbor: weight}
+        """
+        return self.adj.get(node, {})
+
+    def __repr__(self):
+        """
+        Hiển thị ngắn gọn đồ thị.
+        """
+        return f"Graph(adj={self.adj})"
