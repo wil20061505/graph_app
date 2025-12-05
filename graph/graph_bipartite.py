@@ -1,41 +1,37 @@
-import heapq
-def prim(graph, start_node=None):
+from collections import deque
+
+def is_bipartite(graph):
     """
-    Thuật toán Prim, dùng đồ thị với cấu trúc:
-        graph.adj = {u: {v: weight}}
+    Kiểm tra đồ thị hai phía.
+    Đồ thị dùng cấu trúc: graph.adj = {u: {v: weight}}.
+    Dùng BFS + tô màu 2 màu.
     """
 
     vertices = graph.get_vertices()
-    if len(vertices) == 0:
-        return 0, []
+    if not vertices:
+        return True
 
-    if start_node is None or start_node not in vertices:
-        start_node = vertices[0]
+    # 0: chưa tô màu, 1 và -1 là hai màu khác nhau
+    colors = {v: 0 for v in vertices}
 
-    mst_set = {start_node}
-    edges_mst = []
-    total_weight = 0
-
-    pq = []
-
-    for neighbor, w in graph.get_neighbors(start_node).items():
-        heapq.heappush(pq, (w, start_node, neighbor))
-
-    while pq and len(mst_set) < len(vertices):
-        weight, u, v = heapq.heappop(pq)
-
-        if v in mst_set:
+    for start in vertices:
+        if colors[start] != 0:
             continue
 
-        mst_set.add(v)
-        edges_mst.append((u, v, weight))
-        total_weight += weight
+        colors[start] = 1
+        queue = deque([start])
 
-        for neighbor, w in graph.get_neighbors(v).items():
-            if neighbor not in mst_set:
-                heapq.heappush(pq, (w, v, neighbor))
+        while queue:
+            u = queue.popleft()
 
-    if len(mst_set) != len(vertices):
-        return None, None
+            # Duyệt neighbors dạng {neighbor: weight}
+            for v in graph.get_neighbors(u).keys():
 
-    return total_weight, edges_mst
+                if colors[v] == 0:  
+                    colors[v] = -colors[u]
+                    queue.append(v)
+
+                elif colors[v] == colors[u]:
+                    return False
+
+    return True
