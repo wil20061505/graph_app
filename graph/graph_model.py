@@ -1,27 +1,23 @@
 ﻿class Graph:
     """
     Đồ thị vô hướng hoặc có hướng, có trọng số.
-    Lưu bằng cấu trúc chuẩn:
+    Lưu bằng cấu trúc:
         adj = {
             u: {v: weight_uv, ...},
             ...
         }
-    Dùng chung cho:
     """
     def __init__(self):
         self.adj = {}
 
     def add_vertex(self, node):
-        """
-        Thêm một đỉnh nếu chưa tồn tại.
-        """
         if node not in self.adj:
             self.adj[node] = {}
 
     def add_edge(self, source, target, weight=1, undirected=False):
         """
-        Thêm cạnh từ source → target với trọng số weight.
-        Nếu undirected=True thì thêm luôn cả chiều ngược lại.
+        Thêm cạnh source → target.
+        Nếu undirected=True thì thêm cả target → source.
         """
         self.add_vertex(source)
         self.add_vertex(target)
@@ -32,21 +28,37 @@
         if undirected:
             self.adj[target][source] = w
 
+    def has_edge(self, u, v):
+        """
+        Kiểm tra tồn tại cạnh u → v.
+        """
+        return u in self.adj and v in self.adj[u]
+
+    def remove_edge(self, u, v, undirected=False):
+        """
+        Xóa cạnh u → v.
+        Nếu undirected=True, xóa luôn v → u.
+        """
+        if u in self.adj and v in self.adj[u]:
+            del self.adj[u][v]
+
+        if undirected and v in self.adj and u in self.adj[v]:
+            del self.adj[v][u]
+
     def get_vertices(self):
-        """
-        Trả về danh sách tất cả các đỉnh.
-        """
         return list(self.adj.keys())
 
     def get_neighbors(self, node):
         """
-        Trả về dict các đỉnh kề dạng:
-           {neighbor: weight}
+        Trả về dict {neighbor: weight}
         """
         return self.adj.get(node, {})
 
+    def degree(self, node):
+        """
+        Bậc của đỉnh trong đồ thị vô hướng.
+        """
+        return len(self.adj.get(node, {}))
+
     def __repr__(self):
-        """
-        Hiển thị ngắn gọn đồ thị.
-        """
         return f"Graph(adj={self.adj})"
