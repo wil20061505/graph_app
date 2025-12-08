@@ -12,21 +12,21 @@ from graph.graph_maxflow_ff import ford_fulkerson
 from graph.graph_euler_fleury import fleury
 from graph.graph_euler_hierholzer import hierholzer
 
-# ===============================
-#  LƯU ĐỒ THỊ TRONG SESSION
-# ===============================
+
+# =======================================================
+# KHỞI TẠO ĐỒ THỊ TRONG SESSION
+# =======================================================
 if "graph" not in st.session_state:
     st.session_state.graph = Graph()
-
 g = st.session_state.graph
 
 
 st.title("Ứng dụng mô phỏng đồ thị")
 
 
-# ===============================
-#  NHẬP CẠNH
-# ===============================
+# =======================================================
+# NHẬP CẠNH
+# =======================================================
 st.subheader("Thêm cạnh")
 col1, col2, col3 = st.columns(3)
 u = col1.text_input("Đỉnh U")
@@ -35,29 +35,24 @@ w = col3.number_input("Trọng số", min_value=1)
 
 if st.button("Thêm cạnh"):
     if u and v:
-        g.add_edge(u, v, w, undirected=True)          # >>> SỬA QUAN TRỌNG
-        st.success("Đã thêm cạnh (vô hướng)")
+        g.add_edge(u, v, w, undirected=True)
+        st.success("Đã thêm cạnh")
     else:
-        st.error("Vui lòng nhập đầy đủ U và V")
+        st.error("Vui lòng nhập U và V")
 
 
-# ===============================
-#  HIỂN THỊ ĐỒ THỊ
-# ===============================
+# =======================================================
+# HIỂN THỊ ĐỒ THỊ
+# =======================================================
 st.subheader("Đồ thị hiện tại")
 
 G = nx.Graph()
-
-# Thêm node
 for node in g.adj:
     G.add_node(node)
-
-# Thêm edge
 for u in g.adj:
-    for v, weight in g.adj[u].items():                # >>> SỬA LỖI ở đây
+    for v, weight in g.adj[u].items():
         G.add_edge(u, v, weight=weight)
 
-# Vẽ đồ thị
 fig, ax = plt.subplots()
 pos = nx.spring_layout(G)
 nx.draw(G, pos, with_labels=True, ax=ax)
@@ -66,66 +61,65 @@ nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, ax=ax)
 st.pyplot(fig)
 
 
-# ===============================
-#  BFS / DFS
-# ===============================
-st.subheader("Duyệt đồ thị")
+# =======================================================
+# CHỌN THUẬT TOÁN
+# =======================================================
+st.subheader("Chọn thuật toán")
+
+algorithm = st.selectbox(
+    "Thuật toán",
+    [
+        "BFS",
+        "DFS",
+        "Dijkstra",
+        "Bipartite",
+        "Prim",
+        "Kruskal",
+        "Ford–Fulkerson",
+        "Euler Fleury",
+        "Euler Hierholzer"
+    ]
+)
+
 start = st.text_input("Điểm bắt đầu")
-colA, colB = st.columns(2)
-
-if colA.button("BFS"):
-    st.write(bfs(g, start))
-
-if colB.button("DFS"):
-    st.write(dfs(g, start))
+target = None
+if algorithm in ["Dijkstra", "Ford–Fulkerson"]:
+    target = st.text_input("Điểm kết thúc / đích")
 
 
-# ===============================
-#  DIJKSTRA
-# ===============================
-st.subheader("Đường đi ngắn nhất")
-target = st.text_input("Điểm kết thúc")
-if st.button("Dijkstra"):
-    dist, path = dijkstra(g, start, target)
-    st.write("Đường đi:", path)
-    st.write("Độ dài:", dist)
+# =======================================================
+# CHẠY THUẬT TOÁN
+# =======================================================
+if st.button("Chạy thuật toán"):
+    result = None
 
+    if algorithm == "BFS":
+        result = bfs(g, start)
 
-# ===============================
-#  BIPARTITE
-# ===============================
-st.subheader("Kiểm tra đồ thị 2 phía")
-if st.button("Kiểm tra bipartite"):
-    st.write(is_bipartite(g))
+    elif algorithm == "DFS":
+        result = dfs(g, start)
 
+    elif algorithm == "Dijkstra":
+        dist, path = dijkstra(g, start, target)
+        result = {"path": path, "distance": dist}
 
-# ===============================
-#  MST
-# ===============================
-st.subheader("Cây bao trùm nhỏ nhất")
-if st.button("Prim"):
-    st.write(prim(g, start))
+    elif algorithm == "Bipartite":
+        result = is_bipartite(g)
 
-if st.button("Kruskal"):
-    st.write(kruskal(g))
+    elif algorithm == "Prim":
+        result = prim(g, start)
 
+    elif algorithm == "Kruskal":
+        result = kruskal(g)
 
-# ===============================
-#  MAXFLOW
-# ===============================
-st.subheader("Ford–Fulkerson")
-src = st.text_input("Nguồn")
-sink = st.text_input("Đích")
-if st.button("Maxflow"):
-    st.write(ford_fulkerson(g, src, sink))
+    elif algorithm == "Ford–Fulkerson":
+        result = ford_fulkerson(g, start, target)
 
+    elif algorithm == "Euler Fleury":
+        result = fleury(g)
 
-# ===============================
-#  EULER
-# ===============================
-st.subheader("Chu trình Euler")
-if st.button("Fleury"):
-    st.write(fleury(g))
+    elif algorithm == "Euler Hierholzer":
+        result = hierholzer(g)
 
-if st.button("Hierholzer"):
-    st.write(hierholzer(g))
+    st.subheader("Kết quả")
+    st.write(result)
