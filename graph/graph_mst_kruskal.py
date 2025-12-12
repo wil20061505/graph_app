@@ -1,69 +1,125 @@
-class DisjointSet:
-    def __init__(self, n):
-        self.parent = list(range(n))
-        self.rank = [0] * n
+import networkx as nx
+import matplotlib.pyplot as plt
 
-    def find(self, x):
-        if self.parent[x] != x:
-            self.parent[x] = self.find(self.parent[x])
-        return self.parent[x]
+def kruskal(G):
+    """
+    Chạy thuật toán Kruskal và ghi lại từng bước để visual bằng Streamlit.
 
-    def union(self, x, y):
-        rx = self.find(x)
-        ry = self.find(y)
-        if rx == ry:
-            return False
+    Trả về:
+        mst_edges  : danh sách cạnh trong MST
+        steps      : danh sách bước cho visual
+        total_weight: tổng trọng số cây khung nhỏ nhất
+    """
 
-        if self.rank[rx] < self.rank[ry]:
-            self.parent[rx] = ry
-        elif self.rank[rx] > self.rank[ry]:
-            self.parent[ry] = rx
+    # --- Chuẩn bị ---
+    edges = sorted(G.edges(data=True), key=lambda x: x[2].get("weight", 1))
+    uf = {node: node for node in G.nodes()}
+
+    def find(x):
+        while uf[x] != x:
+            x = uf[x]
+        return x
+
+    def union(a, b):
+        uf[find(a)] = find(b)
+
+    mst_edges = []
+    steps = []
+
+    # --- Layout giữ nguyên để tránh layout bị nhảy ---
+    pos = nx.spring_layout(G, seed=42)
+
+    # --- Bước 0: graph ban đầu ---
+    fig, ax = plt.subplots(figsize=(6, 4))
+    nx.draw(G, pos, with_labels=True, ax=ax)
+    edge_labels = nx.get_edge_attributes(G, "weight")
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, ax=ax)
+    steps.append({
+        "fig": fig,
+        "description": "Khởi tạo – chưa chọn cạnh nào."
+    })
+
+    # --- Thuật toán Kruskal ---
+    for u, v, data in edges:
+        w = data.get("weight", 1)
+
+        # snapshot trước khi quyết định chọn cạnh
+        fig, ax = plt.subplots(figsize=(6, 4))
+        nx.draw(G, pos, with_labels=True, ax=ax)
+
+        nx.draw_networkx_edges(G, pos,
+                               edgelist=[(u, v)],
+                               width=3, edge_color="orange",
+                               ax=ax)
+        nx.draw_networkx_edge_labels(G, pos,
+                                     edge_labels=nx.get_edge_attributes(G, "weight"),
+                                     ax=ax)
+
+        steps.append({
+            "fig": fig,
+            "description": f"Xét cạnh ({u}, {v}) trọng số {w}"
+        })
+
+        # kiểm tra có tạo cycle không
+        if find(u) != find(v):
+            union(u, v)
+            mst_edges.append((u, v, w))
+
+            # bước chọn cạnh
+            fig, ax = plt.subplots(figsize=(6, 4))
+            nx.draw(G, pos, with_labels=True, ax=ax)
+
+            nx.draw_networkx_edges(G, pos,
+                                   edgelist=mst_edges,
+                                   width=3, edge_color="green",
+                                   ax=ax)
+
+            nx.draw_networkx_edge_labels(G, pos,
+                                         edge_labels=nx.get_edge_attributes(G, "weight"),
+                                         ax=ax)
+
+            steps.append({
+                "fig": fig,
+                "description": f"Chọn cạnh ({u}, {v}) – thêm vào MST"
+            })
         else:
-            self.parent[ry] = rx
-            self.rank[rx] += 1
-        return True
+            # bước loại cạnh vì tạo chu trình
+            fig, ax = plt.subplots(figsize=(6, 4))
+            nx.draw(G, pos, with_labels=True, ax=ax)
 
+            nx.draw_networkx_edges(G, pos,
+                                   edgelist=[(u, v)],
+                                   width=3, edge_color="red",
+                                   style="dashed",
+                                   ax=ax)
 
-class Kruskal:
-    def run(self, g):
-        # Lấy danh sách đỉnh
-        vertices = g.get_vertices()
+            nx.draw_networkx_edge_labels(G, pos,
+                                         edge_labels=nx.get_edge_attributes(G, "weight"),
+                                         ax=ax)
 
-        # Map đỉnh → index (vì DSU dùng số)
-        index_of = {v: i for i, v in enumerate(vertices)}
+            steps.append({
+                "fig": fig,
+                "description": f"Loại cạnh ({u}, {v}) – tạo chu trình"
+            })
 
-        # Tạo danh sách cạnh (u, v, weight)
-        edges = []
-        added = set()  # tránh trùng cạnh trong đồ thị vô hướng
+    # --- Tính tổng trọng số MST ---
+    total_weight = sum(w for (_, _, w) in mst_edges)
 
-        for u in g.adj:
-            for v, w in g.adj[u].items():
-                key = tuple(sorted([u, v]))
-                if key not in added:  # tránh thêm 2 lần trong undirected graph
-                    edges.append((u, v, w))
-                    added.add(key)
+    # --- Bước cuối: MST hoàn chỉnh ---
+    fig, ax = plt.subplots(figsize=(6, 4))
+    nx.draw(G, pos, with_labels=True, ax=ax)
+    nx.draw_networkx_edges(G, pos,
+                           edgelist=mst_edges,
+                           width=3, edge_color="green",
+                           ax=ax)
 
-        # Sắp xếp cạnh theo trọng số
-        edges.sort(key=lambda x: x[2])
+    nx.draw_networkx_edge_labels(G, pos,
+                                 edge_labels=nx.get_edge_attributes(G, "weight"),
+                                 ax=ax)
 
-        dsu = DisjointSet(len(vertices))
+    steps.append({
+        "fig": fig,
+        "description": f"Hoàn thành! Tổng trọng số MST = {total_weight}"
+    })
 
-        mst = []
-        total_weight = 0
-
-        for u, v, w in edges:
-            iu = index_of[u]
-            iv = index_of[v]
-
-            if dsu.union(iu, iv):  # nếu hợp nhất được → không tạo chu trình
-                mst.append((u, v, w))
-                total_weight += w
-
-                if len(mst) == len(vertices) - 1:
-                    break
-
-        return mst, total_weight
-
-
-def kruskal(g):
-    return Kruskal().run(g)
+    return mst_edges, steps, total_weight
