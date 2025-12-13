@@ -432,7 +432,7 @@ elif algorithm == "Ford–Fulkerson":
         st.pyplot(fig)
 
         # hiện thị kết quả
-        result = st.session_state.ff_flow
+        result = st.session_state.ff_flow 
 if algorithm == "BFS": 
     result = bfs_result(g,start)
 elif algorithm == "DFS":
