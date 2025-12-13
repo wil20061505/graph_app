@@ -1,6 +1,8 @@
 import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
+import time
+from draw_graph import draw_graph_with_highlight 
 
 from graph.graph_model import Graph
 from graph.graph_bfs_dfs import bfs, dfs
@@ -100,6 +102,7 @@ NEED_TARGET = {"Dijkstra", "Ford–Fulkerson"}
 
 start = None
 target = None
+placeholder = st.empty()
 
 if algorithm in NEED_START:
     start = st.text_input("Điểm bắt đầu")
@@ -122,10 +125,23 @@ if st.button("▶ Chạy thuật toán"):
         st.stop()
 
     if algorithm == "BFS":
-        result = bfs(g, start)
+        steps = bfs(g, start)
+
+        for i, visited in enumerate(steps):
+            fig = draw_graph_with_highlight(g, visited)
+            placeholder.pyplot(fig)
+            st.caption(f"Bước {i+1}: đã thăm {list(visited)}")
+            time.sleep(0.8)
 
     elif algorithm == "DFS":
-        result = dfs(g, start)
+        steps = dfs(g, start)
+
+        for i, visited in enumerate(steps):
+            fig = draw_graph_with_highlight(g, visited)
+            placeholder.pyplot(fig)
+            st.caption(f"Bước {i+1}: đã thăm {list(visited)}")
+            time.sleep(0.8)
+
 
     elif algorithm == "Dijkstra":
         dist, path = dijkstra(g, start, target)

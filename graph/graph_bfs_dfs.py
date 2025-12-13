@@ -1,6 +1,6 @@
 ﻿import copy
 
-def bfs_steps(graph, start):
+def bfs(graph, start):
     if start not in graph.adj:
         return []
 
@@ -19,7 +19,7 @@ def bfs_steps(graph, start):
 
     return steps
 
-def dfs_steps(graph, start):
+def dfs(graph, start):
     if start not in graph.adj:
         return []
 
