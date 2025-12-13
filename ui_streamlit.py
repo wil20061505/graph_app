@@ -123,7 +123,10 @@ if st.button("Chạy thuật toán"):
         result = {"distance": dist, "path": path}
 
     elif algorithm == "Bipartite":
-        result = is_bipartite(g)
+        if is_bipartite(g):
+            result = "Đồ thị là đồ thị 2 phía "
+        else:
+            result = "Đồ thị không phải đồ thị 2 phía "
 
     elif algorithm == "Prim":
         result = prim(g, start)
@@ -137,7 +140,7 @@ if st.button("Chạy thuật toán"):
     elif algorithm == "Euler Fleury":
         result = fleury(g)
 
-    elif algorithm == "Euler Hierholzer":
+    elif algorithm == "Euler Hierholzer": 
         result = hierholzer(g)
 
     st.subheader("Kết quả")
