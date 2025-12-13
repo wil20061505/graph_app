@@ -5,7 +5,7 @@ import time
 from draw_graph import draw_graph_with_highlight 
 
 from graph.graph_model import Graph
-from graph.graph_bfs_dfs import bfs, dfs
+from graph.graph_bfs_dfs import bfs, dfs,bfs_result,dfs_result
 from graph.graph_shortest_path import dijkstra
 from graph.graph_bipartite import is_bipartite
 from graph.graph_mst_prim import prim
@@ -169,6 +169,8 @@ if st.button("▶ Chạy thuật toán"):
         result = hierholzer(g)
 
     st.subheader("Kết quả")
-    if algorithm == "BFS" or algorithm == "DFS":
-        result = "Trực quan hóa thành công "
+    if algorithm == "BFS": 
+        result = bfs_result(g,start)
+    elif algorithm == "DFS":
+        result = dfs_result(g,start)        
     st.write(result)
