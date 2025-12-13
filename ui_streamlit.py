@@ -14,31 +14,45 @@ from graph.graph_euler_hierholzer import hierholzer
 
 
 # =======================================================
-# KHỞI TẠO ĐỒ THỊ TRONG SESSION
+# KHỞI TẠO ĐỒ THỊ
 # =======================================================
 if "graph" not in st.session_state:
     st.session_state.graph = Graph()
 g = st.session_state.graph
 
-
 st.title("Ứng dụng mô phỏng đồ thị")
 
 
 # =======================================================
-# NHẬP CẠNH
+# THÊM / XÓA CẠNH
 # =======================================================
-st.subheader("Thêm cạnh")
+st.subheader("Quản lý cạnh")
+
 col1, col2, col3 = st.columns(3)
 u = col1.text_input("Đỉnh U")
 v = col2.text_input("Đỉnh V")
-w = col3.number_input("Trọng số", min_value=1)
+w = col3.number_input("Trọng số", min_value=1, value=1)
 
-if st.button("Thêm cạnh"):
-    if u and v:
-        g.add_edge(u, v, w, undirected=True)
-        st.success("Đã thêm cạnh")
-    else:
-        st.error("Vui lòng nhập U và V")
+col_add, col_del = st.columns(2)
+
+with col_add:
+    if st.button("Thêm cạnh"):
+        if u and v:
+            g.add_edge(u, v, w, undirected=True)
+            st.success(f"Đã thêm cạnh {u} — {v}")
+        else:
+            st.error("Vui lòng nhập U và V")
+
+with col_del:
+    if st.button("Xóa cạnh"):
+        if u and v:
+            if g.has_edge(u, v):
+                g.remove_edge(u, v, undirected=True)
+                st.success(f"Đã xóa cạnh {u} — {v}")
+            else:
+                st.warning("Cạnh không tồn tại")
+        else:
+            st.error("Vui lòng nhập U và V")
 
 
 # =======================================================
@@ -55,7 +69,7 @@ for u0 in g.adj:
 
 fig, ax = plt.subplots()
 pos = nx.spring_layout(G, seed=42)
-nx.draw(G, pos, with_labels=True, ax=ax)
+nx.draw(G, pos, with_labels=True, node_color="lightblue", ax=ax)
 edge_labels = nx.get_edge_attributes(G, "weight")
 nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, ax=ax)
 st.pyplot(fig)
@@ -81,9 +95,6 @@ algorithm = st.selectbox(
     ]
 )
 
-# =======================================================
-# QUY ĐỊNH INPUT CẦN THIẾT
-# =======================================================
 NEED_START = {"BFS", "DFS", "Dijkstra", "Prim", "Ford–Fulkerson"}
 NEED_TARGET = {"Dijkstra", "Ford–Fulkerson"}
 
@@ -100,7 +111,7 @@ if algorithm in NEED_TARGET:
 # =======================================================
 # CHẠY THUẬT TOÁN
 # =======================================================
-if st.button("Chạy thuật toán"):
+if st.button("▶ Chạy thuật toán"):
 
     if algorithm in NEED_START and not start:
         st.error("Thuật toán này cần điểm bắt đầu")
@@ -109,8 +120,6 @@ if st.button("Chạy thuật toán"):
     if algorithm in NEED_TARGET and not target:
         st.error("Thuật toán này cần điểm kết thúc")
         st.stop()
-
-    result = None
 
     if algorithm == "BFS":
         result = bfs(g, start)
