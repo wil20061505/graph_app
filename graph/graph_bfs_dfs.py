@@ -25,26 +25,31 @@ def dfs(graph, start):
                     stack.append(v)
 
     return visited
+from collections import deque
 
 def bfs(graph, start):
     """
-    Đếm số đỉnh reachable từ start (BFS).
-    Dùng để kiểm tra cạnh có phải là cầu hay không.
+    Duyệt BFS trên Graph.
+    Trả về danh sách thứ tự duyệt.
     """
     if start not in graph.adj:
-        return 0
+        return f"Đỉnh {start} không tồn tại trong đồ thị."
 
-    visited = {start}
-    queue = [start]
+    visited = []
+    seen = {start}
+    queue = deque([start])
 
     while queue:
-        u = queue.pop(0)
+        u = queue.popleft()
+        visited.append(u)
+
         for v in graph.adj[u]:
-            if v not in visited:
-                visited.add(v)
+            if v not in seen:
+                seen.add(v)
                 queue.append(v)
 
-    return len(visited)
+    return visited
+
 
 
 
