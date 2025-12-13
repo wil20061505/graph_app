@@ -5,7 +5,7 @@ import time
 from draw_graph import draw_graph_with_highlight
 
 from graph.graph_model import Graph
-from graph.graph_bfs_dfs import bfs, dfs
+from graph.graph_bfs_dfs import bfs, dfs , bfs_result, dfs_result
 from graph.graph_shortest_path import dijkstra
 from graph.graph_bipartite import is_bipartite
 from graph.graph_mst_prim import prim
@@ -271,8 +271,9 @@ elif algorithm == "Ford–Fulkerson":
         if not src or not sink:
             st.error("Vui lòng nhập nguồn và đích!")
         else:
-            flow, steps = ford_fulkerson(g, src, sink, record_steps=True)
-            st.session_state.ff_steps = steps or []
+            flow, steps = ford_fulkerson(g, src, sink, record_steps=True) # pyright: ignore[reportGeneralTypeIssues]
+            steps = steps or []
+            st.session_state.ff_steps = steps
             st.session_state.ff_step_index = 0
             st.session_state.ff_flow = flow
             st.session_state.ff_pos = None
@@ -282,7 +283,8 @@ elif algorithm == "Ford–Fulkerson":
                 st.success(f"Đã chạy xong! Maxflow = {flow}")
 
     # Chạy các bước nếu có
-    steps = st.session_state.get("ff_steps", [])
+    steps = st.session_state.get("ff_steps") or []
+
     if len(steps) == 0:
         st.info("Chưa có bước nào để hiển thị. Nhấn 'Chạy Maxflow' để bắt đầu.")
         result = None
@@ -431,6 +433,9 @@ elif algorithm == "Ford–Fulkerson":
 
         # hiện thị kết quả
         result = st.session_state.ff_flow
+if algorithm == "BFS": 
+    result = bfs_result(g,start)
+elif algorithm == "DFS":
+    result = dfs_result(g,start)  
 st.subheader("Kết quả")
 st.write(result)
-
