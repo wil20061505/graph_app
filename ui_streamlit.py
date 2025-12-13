@@ -49,14 +49,14 @@ st.subheader("Đồ thị hiện tại")
 G = nx.Graph()
 for node in g.adj:
     G.add_node(node)
-for u in g.adj:
-    for v, weight in g.adj[u].items():
-        G.add_edge(u, v, weight=weight)
+for u0 in g.adj:
+    for v0, weight in g.adj[u0].items():
+        G.add_edge(u0, v0, weight=weight)
 
 fig, ax = plt.subplots()
-pos = nx.spring_layout(G)
+pos = nx.spring_layout(G, seed=42)
 nx.draw(G, pos, with_labels=True, ax=ax)
-edge_labels = nx.get_edge_attributes(G, 'weight')
+edge_labels = nx.get_edge_attributes(G, "weight")
 nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, ax=ax)
 st.pyplot(fig)
 
@@ -81,9 +81,19 @@ algorithm = st.selectbox(
     ]
 )
 
-start = st.text_input("Điểm bắt đầu")
+# =======================================================
+# QUY ĐỊNH INPUT CẦN THIẾT
+# =======================================================
+NEED_START = {"BFS", "DFS", "Dijkstra", "Prim", "Ford–Fulkerson"}
+NEED_TARGET = {"Dijkstra", "Ford–Fulkerson"}
+
+start = None
 target = None
-if algorithm in ["Dijkstra", "Ford–Fulkerson"]:
+
+if algorithm in NEED_START:
+    start = st.text_input("Điểm bắt đầu")
+
+if algorithm in NEED_TARGET:
     target = st.text_input("Điểm kết thúc / đích")
 
 
@@ -91,6 +101,15 @@ if algorithm in ["Dijkstra", "Ford–Fulkerson"]:
 # CHẠY THUẬT TOÁN
 # =======================================================
 if st.button("Chạy thuật toán"):
+
+    if algorithm in NEED_START and not start:
+        st.error("Thuật toán này cần điểm bắt đầu")
+        st.stop()
+
+    if algorithm in NEED_TARGET and not target:
+        st.error("Thuật toán này cần điểm kết thúc")
+        st.stop()
+
     result = None
 
     if algorithm == "BFS":
@@ -101,7 +120,7 @@ if st.button("Chạy thuật toán"):
 
     elif algorithm == "Dijkstra":
         dist, path = dijkstra(g, start, target)
-        result = {"path": path, "distance": dist}
+        result = {"distance": dist, "path": path}
 
     elif algorithm == "Bipartite":
         result = is_bipartite(g)
