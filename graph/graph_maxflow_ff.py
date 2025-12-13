@@ -1,75 +1,73 @@
-from collections import deque
+import collections
 
+def ford_fulkerson(graph, source, sink, record_steps=False):
+    """
+    Ford–Fulkerson với BFS (Edmonds–Karp)
+    Trả về: (max_flow, steps)
+    steps chỉ có nếu record_steps=True
+    """
 
-class FordFulkerson:
-    def run(self, g, source, sink):
-        # Lấy danh sách đỉnh
-        vertices = g.get_vertices()
-        n = len(vertices)
+    # Tạo residual graph dạng {u: {v: cap}}
+    residual = {}
+    for u in graph.adj:
+        residual.setdefault(u, {})
+        for v, w in graph.adj[u].items():
+            residual[u][v] = w
+            residual.setdefault(v, {})
+            if u not in residual[v]:
+                residual[v][u] = 0
 
-        # Map: đỉnh → index
-        index_of = {v: i for i, v in enumerate(vertices)}
-        node_of = {i: v for v, i in index_of.items()}
+    steps = []
+    max_flow = 0
 
-        # Tạo capacity matrix (ma trận sức chứa)
-        capacity = [[0] * n for _ in range(n)]
-        for u in g.adj:
-            for v, w in g.adj[u].items():
-                iu = index_of[u]
-                iv = index_of[v]
-                capacity[iu][iv] = w
+    # ---------------- BFS tìm đường tăng ----------------
+    def bfs():
+        parent = {source: None}
+        queue = collections.deque([source])
 
-        # Residual capacity
-        residual = [row[:] for row in capacity]
+        while queue:
+            u = queue.popleft()
+            for v, cap in residual[u].items():
+                if cap > 0 and v not in parent:
+                    parent[v] = u
+                    if v == sink:
+                        return parent
+                    queue.append(v)
+        return None
 
-        # BFS tìm đường tăng luồng (augmenting path)
-        def bfs(s, t, parent):
-            visited = [False] * n
-            queue = deque([s])
-            visited[s] = True
-            parent[s] = -1
+    # ---------------- Lặp tới khi hết đường tăng ----------------
+    while True:
+        parent = bfs()
+        if parent is None:
+            break
 
-            while queue:
-                u = queue.popleft()
-                for v in range(n):
-                    if not visited[v] and residual[u][v] > 0:
-                        visited[v] = True
-                        parent[v] = u
-                        queue.append(v)
+        # reconstruct path
+        path = []
+        v = sink
+        while v != source:
+            u = parent[v]
+            path.append((u, v))
+            v = u
+        path.reverse()
 
-                        if v == t:
-                            return True
-            return False
+        # bottleneck
+        bottleneck = min(residual[u][v] for u, v in path)
 
-        s = index_of[source]
-        t = index_of[sink]
-        parent = [-1] * n
+        # update residual
+        for u, v in path:
+            residual[u][v] -= bottleneck
+            residual[v][u] += bottleneck
 
-        max_flow = 0
+        max_flow += bottleneck
 
-        # Thuật toán Edmonds–Karp
-        while bfs(s, t, parent):
-            # Tìm bottleneck (độ co)
-            path_flow = float("inf")
-            v = t
-            while v != s:
-                u = parent[v]
-                path_flow = min(path_flow, residual[u][v])
-                v = u
+        if record_steps:
+            # deep copy residual
+            res_copy = {u: dict(vs) for u, vs in residual.items()}
+            steps.append({
+                "augment_path": path.copy(),
+                "bottleneck": bottleneck,
+                "flow_added": max_flow,
+                "residual": res_copy
+            })
 
-            # Cập nhật residual graph
-            v = t
-            while v != s:
-                u = parent[v]
-                residual[u][v] -= path_flow
-                residual[v][u] += path_flow  # reverse edge
-                v = u
-
-            max_flow += path_flow
-
-        # Trả ma trận residual như một dạng flow để debug
-        return max_flow, residual
-
-
-def ford_fulkerson(g, source, sink):
-    return FordFulkerson().run(g, source, sink)
+    return (max_flow, steps) if record_steps else max_flow
