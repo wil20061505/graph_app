@@ -169,4 +169,6 @@ if st.button("▶ Chạy thuật toán"):
         result = hierholzer(g)
 
     st.subheader("Kết quả")
+    if algorithm == "BFS" or algorithm == "DFS":
+        result = "Trực quan hóa thành công "
     st.write(result)
