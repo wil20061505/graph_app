@@ -191,7 +191,7 @@ elif algorithm == "Kruskal":
 
     # --- Chạy Kruskal ---
     if st.button("Chạy Kruskal"):
-        from graph_mst_kruskal import kruskal
+        from graph.graph_mst_kruskal import kruskal
 
         mst_edges, steps, total_weight = kruskal(G)
 
@@ -433,3 +433,4 @@ elif algorithm == "Ford–Fulkerson":
         result = st.session_state.ff_flow
 st.subheader("Kết quả")
 st.write(result)
+
