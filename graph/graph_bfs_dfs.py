@@ -1,54 +1,44 @@
 ﻿import copy
 
-def dfs(graph, start):
-    """
-    Duyệt DFS trên Graph.
-    Trả về danh sách thứ tự duyệt.
-    """
+def bfs_steps(graph, start):
     if start not in graph.adj:
-        return f"Đỉnh {start} không tồn tại trong đồ thị."
+        return []
 
-    visited = []
-    seen = set()
+    steps = []
+    visited = set([start])
+    queue = [start]
+
+    while queue:
+        u = queue.pop(0)
+        steps.append(set(visited))   # snapshot
+
+        for v in graph.adj[u]:
+            if v not in visited:
+                visited.add(v)
+                queue.append(v)
+
+    return steps
+
+def dfs_steps(graph, start):
+    if start not in graph.adj:
+        return []
+
+    steps = []
+    visited = set()
     stack = [start]
 
     while stack:
         u = stack.pop()
+        if u not in visited:
+            visited.add(u)
+            steps.append(set(visited))  # snapshot
 
-        if u not in seen:
-            seen.add(u)
-            visited.append(u)
-
-            # duyệt theo thứ tự adj (đảo để giống đệ quy)
             for v in reversed(list(graph.adj[u].keys())):
-                if v not in seen:
+                if v not in visited:
                     stack.append(v)
 
-    return visited
-from collections import deque
+    return steps
 
-def bfs(graph, start):
-    """
-    Duyệt BFS trên Graph.
-    Trả về danh sách thứ tự duyệt.
-    """
-    if start not in graph.adj:
-        return f"Đỉnh {start} không tồn tại trong đồ thị."
-
-    visited = []
-    seen = {start}
-    queue = deque([start])
-
-    while queue:
-        u = queue.popleft()
-        visited.append(u)
-
-        for v in graph.adj[u]:
-            if v not in seen:
-                seen.add(v)
-                queue.append(v)
-
-    return visited
 
 
 
