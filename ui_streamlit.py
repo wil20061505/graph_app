@@ -216,16 +216,16 @@ elif algorithm == "Kruskal":
 
         step = steps[idx]
 
-        st.markdown(f"## 🔵 Bước {idx+1}/{len(steps)}")
+        st.markdown(f"## O Bước {idx+1}/{len(steps)}")
         st.write(step["description"])
 
         # Điều hướng bước trước / sau
         c1, _, c2 = st.columns([1, 4, 1])
         with c1:
-            if st.button("◀️", key="kr_prev"):
+            if st.button("◀", key="kr_prev"):
                 st.session_state.kr_index = max(0, idx - 1)
         with c2:
-            if st.button("▶️", key="kr_next"):
+            if st.button("▶", key="kr_next"):
                 st.session_state.kr_index = min(len(steps) - 1, idx + 1)
 
         # LAYOUT cố định
@@ -295,7 +295,7 @@ elif algorithm == "Ford–Fulkerson":
         st.session_state.ff_step_index = idx
         step = steps[idx]
 
-        st.markdown(f"## 🔵 Bước {idx + 1}/{len(steps)}")
+        st.markdown(f"## O Bước {idx + 1}/{len(steps)}")
         st.write(f"**Đường tăng:** {step['augment_path']}")
         st.write(f"**Bottleneck:** {step['bottleneck']}")
         st.write(f"**Flow tích lũy:** {step['flow_added']}")
@@ -303,10 +303,10 @@ elif algorithm == "Ford–Fulkerson":
         # Các nút điều hướng
         colA, colB, colC = st.columns([1, 2, 1])
         with colA:
-            if st.button("◀️", key="ff_prev"):
+            if st.button("◀", key="ff_prev"):
                 st.session_state.ff_step_index = max(0, st.session_state.ff_step_index - 1)
         with colC:
-            if st.button("▶️", key="ff_next"):
+            if st.button("▶", key="ff_next"):
                 st.session_state.ff_step_index = min(len(steps) - 1, st.session_state.ff_step_index + 1)
 
         # Tạo các bước hiện ra
